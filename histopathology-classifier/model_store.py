@@ -18,13 +18,15 @@ MODEL_SHA256 = {
 }
 
 
-def _request(url: str, token: str, accept: str) -> Request:
-    return Request(url, headers={
+def _request(url: str, token: str | None, accept: str) -> Request:
+    headers = {
         "Accept": accept,
-        "Authorization": f"Bearer {token}",
         "User-Agent": "histopathology-classifier",
         "X-GitHub-Api-Version": "2022-11-28",
-    })
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return Request(url, headers=headers)
 
 
 def ensure_model_file(filename: str, local_dir: Path, token: str | None) -> Path:
@@ -40,12 +42,6 @@ def ensure_model_file(filename: str, local_dir: Path, token: str | None) -> Path
     cache_path = cache_dir / filename
     if cache_path.is_file():
         return cache_path
-    if not token:
-        raise RuntimeError(
-            "The trained models are not on this server. Add a GitHub token with "
-            "Contents: read access to adi-issa/AIML_P2 as GITHUB_TOKEN in "
-            "Streamlit Cloud app secrets."
-        )
 
     try:
         with urlopen(_request(RELEASE_URL, token, "application/vnd.github+json"), timeout=30) as response:
@@ -73,7 +69,7 @@ def ensure_model_file(filename: str, local_dir: Path, token: str | None) -> Path
     except HTTPError as exc:
         raise RuntimeError(
             f"GitHub returned HTTP {exc.code} while fetching {filename}. "
-            "Check that GITHUB_TOKEN can read the private release."
+            "If the repository is private, set GITHUB_TOKEN in Streamlit app secrets."
         ) from exc
     except URLError as exc:
         raise RuntimeError(f"Could not connect to GitHub to fetch {filename}.") from exc

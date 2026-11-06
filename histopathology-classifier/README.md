@@ -43,20 +43,22 @@ temporary development environment; the app stops when the Codespace stops.
 
 ## Deploy the public app on Streamlit Community Cloud
 
-1. Connect Streamlit Community Cloud to the private `adi-issa/AIML_P2` repository.
-2. Create a fine-grained GitHub personal access token for only `AIML_P2` with
-   **Contents: Read-only** permission. The app uses it to download the two
-   model files from the private `models-v1` release.
-3. In the Streamlit deployment form, select branch `main` and main file path
-   `histopathology-classifier/app.py`. Under **Advanced settings → Secrets**,
-   add this TOML entry, replacing the placeholder with the token:
+1. Connect Streamlit Community Cloud to `adi-issa/AIML_P2`.
+2. In the deployment form, select branch `main` and main file path
+   `histopathology-classifier/app.py`.
+3. Deploy. If the repository is public, the app downloads the `models-v1`
+   release assets without a token. If the repository is private, create a
+   fine-grained GitHub personal access token for only `AIML_P2` with
+   **Contents: Read-only** permission. Add it under **Advanced settings →
+   Secrets** (or the deployed app's **Settings → Secrets**) as:
 
    ```toml
    GITHUB_TOKEN = "YOUR_FINE_GRAINED_TOKEN"
    ```
 
    Never add the real token to the GitHub repository or share it in a message.
-4. Deploy, then set **App settings → Sharing → This app is public and searchable**.
+4. Set **App settings → Sharing → This app is public and searchable** if it
+   is not already public.
 
 On first analysis, the app downloads the models into its server cache and checks
 their SHA-256 hashes. This can take several minutes after a restart or when a
