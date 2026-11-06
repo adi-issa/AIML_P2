@@ -36,8 +36,18 @@ printf '%s\n' \
   | (cd "$MODEL_DIR" && sha256sum --check)
 echo "Both model checksums match."
 
-if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  "$PYTHON_BIN" -m venv "$VENV_DIR"
+if [[ ! -x "$VENV_DIR/bin/python" ]] || ! "$VENV_DIR/bin/python" -m pip --version >/dev/null 2>&1; then
+  if ! "$PYTHON_BIN" -m venv "$VENV_DIR"; then
+    if ! command -v sudo >/dev/null 2>&1 || ! command -v apt-get >/dev/null 2>&1; then
+      echo "Could not create the Python environment. Install the venv package for your Python version and rerun." >&2
+      exit 1
+    fi
+    PYTHON_VERSION="$("$PYTHON_BIN" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+    echo "Installing python${PYTHON_VERSION}-venv, required by this Codespace..."
+    sudo apt-get update
+    sudo apt-get install -y "python${PYTHON_VERSION}-venv"
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
+  fi
 fi
 "$VENV_DIR/bin/python" -m pip install -r "$APP_DIR/requirements.txt"
 
