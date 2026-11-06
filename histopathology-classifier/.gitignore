@@ -1,0 +1,9 @@
+.venv/
+.model_cache/
+__pycache__/
+*.pyc
+*.keras
+*.h5
+DataSet20K/
+DataSet20K.zip
+.streamlit/secrets.toml

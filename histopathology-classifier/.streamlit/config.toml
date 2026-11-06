@@ -1,0 +1,14 @@
+[server]
+address = "127.0.0.1"
+headless = false
+showEmailPrompt = false
+maxUploadSize = 1024
+maxMessageSize = 1024
+
+[theme]
+base = "light"
+primaryColor = "#1448FF"
+backgroundColor = "#FAFAFB"
+secondaryBackgroundColor = "#F3F6FF"
+textColor = "#140F50"
+font = "sans serif"
