@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title VibeCode Pathology Portal
+title Histopathology Cancer Classifier
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_and_run.ps1"
 if errorlevel 1 (
   echo.

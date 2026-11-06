@@ -1,4 +1,4 @@
-# VibeCode Pathology Portal
+# Histopathology Cancer Classifier
 
 A local Streamlit portal that classifies a histopathology patch with both
 fine-tuned models from the original notebook:
@@ -19,7 +19,7 @@ The first run creates a private Python 3.11 virtual environment and installs
 TensorFlow and Streamlit. It can take several minutes. When ready, the portal
 opens in your browser. Later starts reuse the same environment.
 
-Alternatively, open PowerShell in the cloned `VibeCode Portal` folder and run:
+Alternatively, open PowerShell in the cloned `histopathology-classifier` folder and run:
 
 ```powershell
 .\setup_and_run.ps1
@@ -30,14 +30,14 @@ Alternatively, open PowerShell in the cloned `VibeCode Portal` folder and run:
 The trained models are **not included in this Git repository**. Their sizes
 (about 481 MB and 259 MB) exceed GitHub's normal file limit. Obtain the two
 `.keras` files from the project owner and put them in an `Orginal Code` folder
-beside the cloned `VibeCode Portal` folder:
+beside the cloned `histopathology-classifier` folder:
 
 ```text
 project/
 ├── Orginal Code/
 │   ├── resnet50v2_Tuning.keras
 │   └── densenet169_Tuning.keras
-└── VibeCode Portal/
+└── histopathology-classifier/
     └── app.py
 ```
 

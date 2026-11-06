@@ -31,6 +31,6 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-Write-Host "Starting VibeCode Pathology Portal..." -ForegroundColor Green
+Write-Host "Starting Histopathology Cancer Classifier..." -ForegroundColor Green
 Set-Location $PortalRoot
 & $VirtualPython -m streamlit run "app.py"

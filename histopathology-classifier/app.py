@@ -35,7 +35,7 @@ TISSUE_BY_CLASS = {
 
 
 st.set_page_config(
-    page_title="VibeCode Pathology Portal",
+    page_title="Histopathology Cancer Classifier",
     page_icon="🔬",
     layout="wide",
 )
