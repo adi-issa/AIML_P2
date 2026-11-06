@@ -25,6 +25,22 @@ Alternatively, open PowerShell in the cloned `histopathology-classifier` folder 
 .\setup_and_run.ps1
 ```
 
+## Run online in GitHub Codespaces
+
+1. [Create a Codespace for AIML_P2](https://codespaces.new/adi-issa/AIML_P2) on the `main` branch.
+2. In its terminal, run:
+
+   ```bash
+   bash histopathology-classifier/run_online.sh
+   ```
+
+3. When port **8501** appears in the **Ports** tab, open its forwarded URL.
+
+The script downloads both models from the private release, verifies their
+SHA-256 checksums, installs dependencies, and starts Streamlit. The forwarded
+port is private by default, so sign in to GitHub to open it. A Codespace is a
+temporary development environment; the app stops when the Codespace stops.
+
 ## Models and class order
 
 The trained models are **not in Git history** because each exceeds GitHub's
