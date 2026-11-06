@@ -27,10 +27,15 @@ Alternatively, open PowerShell in the cloned `histopathology-classifier` folder 
 
 ## Models and class order
 
-The trained models are **not included in this Git repository**. Their sizes
-(about 481 MB and 259 MB) exceed GitHub's normal file limit. Obtain the two
-`.keras` files from the project owner and put them in an `Orginal Code` folder
-beside the cloned `histopathology-classifier` folder:
+The trained models are **not in Git history** because each exceeds GitHub's
+normal file limit. Download both individual files from the private
+[models-v1 release](https://github.com/adi-issa/AIML_P2/releases/tag/models-v1):
+
+- [resnet50v2_Tuning.keras](https://github.com/adi-issa/AIML_P2/releases/download/models-v1/resnet50v2_Tuning.keras)
+- [densenet169_Tuning.keras](https://github.com/adi-issa/AIML_P2/releases/download/models-v1/densenet169_Tuning.keras)
+
+Keep their filenames unchanged. Put them in an `Orginal Code` folder beside
+the cloned `histopathology-classifier` folder:
 
 ```text
 project/
@@ -41,12 +46,19 @@ project/
     └── app.py
 ```
 
-Alternatively, set `VIBECODE_MODEL_DIR` to the folder containing both files
+Alternatively, set `HISTOPATHOLOGY_MODEL_DIR` to the folder containing both files
 before starting the app. For example, in PowerShell:
 
 ```powershell
-$env:VIBECODE_MODEL_DIR = "C:\path\to\models"
+$env:HISTOPATHOLOGY_MODEL_DIR = "C:\path\to\models"
 .\setup_and_run.ps1
+```
+
+The release asset SHA-256 checksums are:
+
+```text
+resnet50v2_Tuning.keras  515589e9330ef4ad8250724dd9574da437f0b131a5c1cb06576b9987139e14e3
+densenet169_Tuning.keras  3a20ca66c183cd11b33a4f4eeb190c33a707fc088365ee37ca8d852792642f55
 ```
 
 The class order is preserved exactly from training:

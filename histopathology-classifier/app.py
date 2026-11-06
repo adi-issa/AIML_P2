@@ -23,7 +23,7 @@ from inference import (
 APP_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = APP_DIR.parent
 DEFAULT_MODEL_DIR = Path(
-    os.environ.get("VIBECODE_MODEL_DIR", str(PROJECT_DIR / "Orginal Code"))
+    os.environ.get("HISTOPATHOLOGY_MODEL_DIR", str(PROJECT_DIR / "Orginal Code"))
 ).expanduser()
 TISSUE_BY_CLASS = {
     "Breast InSitu": "Breast",
