@@ -375,7 +375,7 @@ if run_analysis and image is not None:
     for index, spec in enumerate(MODEL_SPECS):
         progress.progress(
             index / len(MODEL_SPECS),
-            text=f"Loading {spec.display_name}…",
+            text=f"Preparing {spec.display_name}…",
         )
         try:
             try:
