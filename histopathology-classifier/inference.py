@@ -110,11 +110,9 @@ def load_model(spec: ModelSpec, model_path: str | Path) -> LoadedModel:
     # the classifier head from that feature tensor preserves the trained
     # weights and gives GradientTape a direct path to the convolutional maps.
     backbone = model.layers[1]
-    # The bundled backbones were trained in mixed float16. On this Windows
-    # CPU half-precision convolutions fall back to slow software kernels.
-    if (path.resolve() == (Path(__file__).resolve().parent.parent / "Orginal Code" / spec.filename)
-            and not tf.config.list_physical_devices("GPU")
-            and backbone.compute_dtype == "float16"):
+    # The bundled backbones were trained in mixed float16. On CPU, half-precision
+    # convolutions can fall back to slow software kernels, including in cloud hosting.
+    if not tf.config.list_physical_devices("GPU") and backbone.compute_dtype == "float16":
         builder = (tf.keras.applications.ResNet50V2 if spec.architecture == "resnet50v2"
                    else tf.keras.applications.DenseNet169)
         cpu_backbone = builder(weights=None, include_top=False, input_shape=(224, 224, 3))
