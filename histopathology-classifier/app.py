@@ -18,6 +18,7 @@ from inference import (
     load_model,
     predict_with_gradcam,
 )
+from model_store import ensure_model_file
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -377,7 +378,11 @@ if run_analysis and image is not None:
             text=f"Loading {spec.display_name}…",
         )
         try:
-            model_path = DEFAULT_MODEL_DIR / spec.filename
+            try:
+                github_token = os.environ.get("GITHUB_TOKEN") or st.secrets.get("GITHUB_TOKEN")
+            except FileNotFoundError:
+                github_token = os.environ.get("GITHUB_TOKEN")
+            model_path = ensure_model_file(spec.filename, DEFAULT_MODEL_DIR, github_token)
             loaded = cached_model(
                 spec,
                 str(model_path.resolve()),

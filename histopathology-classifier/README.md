@@ -41,6 +41,29 @@ SHA-256 checksums, installs dependencies, and starts Streamlit. The forwarded
 port is private by default, so sign in to GitHub to open it. A Codespace is a
 temporary development environment; the app stops when the Codespace stops.
 
+## Deploy the public app on Streamlit Community Cloud
+
+1. Connect Streamlit Community Cloud to the private `adi-issa/AIML_P2` repository.
+2. Create a fine-grained GitHub personal access token for only `AIML_P2` with
+   **Contents: Read-only** permission. The app uses it to download the two
+   model files from the private `models-v1` release.
+3. In the Streamlit deployment form, select branch `main` and main file path
+   `histopathology-classifier/app.py`. Under **Advanced settings → Secrets**,
+   add this TOML entry, replacing the placeholder with the token:
+
+   ```toml
+   GITHUB_TOKEN = "YOUR_FINE_GRAINED_TOKEN"
+   ```
+
+   Never add the real token to the GitHub repository or share it in a message.
+4. Deploy, then set **App settings → Sharing → This app is public and searchable**.
+
+On first analysis, the app downloads the models into its server cache and checks
+their SHA-256 hashes. This can take several minutes after a restart or when a
+sleeping free app wakes. Subsequent analyses reuse the cached files and loaded
+models while the server remains active. The free tier may hit its memory limit;
+verify both models work with a sample patch before sharing the link.
+
 ## Models and class order
 
 The trained models are **not in Git history** because each exceeds GitHub's
