@@ -295,13 +295,14 @@ def result_summary(result, spec: ModelSpec) -> str:
     buffer = io.BytesIO()
     result.overlay.save(buffer, format="PNG")
     overlay = base64.b64encode(buffer.getvalue()).decode("ascii")
+    activation_label = "Grad-CAM" if getattr(result, "has_activation", True) else "No positive activation"
     return f"""
     <article class="specimen {spec.architecture}">
       <div class="specimen-body">
         <div class="plate-id">{html.escape(result.model_name)}</div>
         <div class="plate-face">
           <div><span class="plate-caption">Predicted class</span><div class="plate-class"><h3>{html.escape(result.predicted_class)}</h3><span class="plate-organ" aria-label="Predicted tissue: {predicted_tissue(result.predicted_class)}">{predicted_tissue(result.predicted_class)}</span></div></div>
-          <figure class="plate-lens"><img src="data:image/png;base64,{overlay}" alt="{html.escape(result.model_name)} activation overlay"><figcaption>Grad-CAM</figcaption></figure>
+          <figure class="plate-lens"><img src="data:image/png;base64,{overlay}" alt="{html.escape(result.model_name)} {activation_label}"><figcaption>{activation_label}</figcaption></figure>
         </div>
         <div class="plate-score"><strong>{result.confidence:.2%}</strong><span>{result.confidence_level} confidence</span></div>
         <div class="plate-meter" aria-hidden="true"><span style="width:{result.confidence:.2%}"></span></div>
@@ -449,19 +450,30 @@ if image is not None and (results or errors):
                 result_summary(result, spec),
                 unsafe_allow_html=True,
             )
+            has_activation = getattr(result, "has_activation", True)
+            if not has_activation:
+                st.info(
+                    f"{spec.display_name} has no positive Grad-CAM activation for "
+                    "this prediction. The image above is the original patch, "
+                    "and the ROI contains no highlighted region."
+                )
             tabs = st.tabs(("Grad-CAM overlay", "Heatmap", "Highlighted ROI"))
             with tabs[0]:
                 st.image(
                     result.overlay,
-                    caption=f"{spec.display_name} Grad-CAM overlay",
+                    caption=(f"{spec.display_name} Grad-CAM overlay" if has_activation
+                             else "Original patch — no positive activation"),
                     use_container_width=True,
                 )
             with tabs[1]:
-                st.image(
-                    heatmap_image(result.heatmap),
-                    caption="Blue = lower influence · red = higher influence",
-                    use_container_width=True,
-                )
+                if has_activation:
+                    st.image(
+                        heatmap_image(result.heatmap),
+                        caption="Blue = lower influence · red = higher influence",
+                        use_container_width=True,
+                    )
+                else:
+                    st.info("No positive Grad-CAM activation is available for this prediction.")
             with tabs[2]:
                 st.image(
                     result.roi,

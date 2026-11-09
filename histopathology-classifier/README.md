@@ -111,6 +111,10 @@ The class order is preserved exactly from training:
 5. LUGAD
 
 After uploading a patch, set the ROI threshold above **Analyse with both models**.
+Grad-CAM follows the updated notebook: it uses the predicted class score before
+softmax, computes gradients in float32, and reports when no positive activation
+is present. The ROI outline appears only when the threshold selects some, but
+not all, heatmap pixels.
 
 ## Meaning of the numbers
 

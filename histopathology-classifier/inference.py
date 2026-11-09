@@ -49,6 +49,7 @@ class PredictionResult:
     confidence_level: str
     probabilities: dict[str, float]
     heatmap: np.ndarray
+    has_activation: bool
     overlay: Image.Image
     roi: Image.Image
     inference_seconds: float
@@ -101,7 +102,9 @@ def load_model(spec: ModelSpec, model_path: str | Path) -> LoadedModel:
         raise FileNotFoundError(f"Model file not found: {path}")
 
     model = tf.keras.models.load_model(path, compile=False)
-    if len(model.layers) < 3:
+    if (len(model.layers) < 6
+            or not isinstance(model.layers[3], tf.keras.layers.Dense)
+            or not isinstance(model.layers[5], tf.keras.layers.Dense)):
         raise ValueError(
             f"{path.name} does not match the expected backbone + classifier layout."
         )
@@ -148,23 +151,41 @@ def predict_with_gradcam(
     image_batch = prepare_image(image, loaded_model)
 
     feature_maps = loaded_model.backbone(image_batch, training=False)
+    predictions = feature_maps
+    for layer in loaded_model.model:
+        predictions = layer(predictions, training=False)
+
+    # The updated training notebook computes Grad-CAM from the class logit,
+    # not the softmax probability. Float32 avoids weak/zero gradients from
+    # saturated softmax output and mixed-precision classifier layers.
+    feature_maps = tf.cast(feature_maps, tf.float32)
+    class_index = int(tf.argmax(predictions[0]).numpy())
+    dense_layer = loaded_model.model[1]
+    output_layer = loaded_model.model[3]
     with tf.GradientTape(watch_accessed_variables=False) as tape:
         tape.watch(feature_maps)
-        predictions = feature_maps
-        for layer in loaded_model.model:
-            predictions = layer(predictions, training=False)
-        class_index_tensor = tf.argmax(predictions[0])
-        class_score = predictions[:, class_index_tensor]
+        pooled = tf.reduce_mean(feature_maps, axis=(1, 2))
+        hidden = tf.nn.relu(
+            tf.matmul(pooled, tf.cast(dense_layer.kernel, tf.float32))
+            + tf.cast(dense_layer.bias, tf.float32)
+        )
+        logits = tf.matmul(hidden, tf.cast(output_layer.kernel, tf.float32))
+        if output_layer.use_bias:
+            logits = logits + tf.cast(output_layer.bias, tf.float32)
+        class_score = logits[0, class_index]
 
     gradients = tape.gradient(class_score, feature_maps)
     if gradients is None:
         raise RuntimeError("Grad-CAM gradients could not be calculated for this model.")
+    tf.debugging.assert_all_finite(gradients, "Grad-CAM gradients contain NaN or Inf.")
 
-    weights = tf.reduce_mean(gradients, axis=(0, 1, 2))
+    weights = tf.reduce_mean(gradients[0], axis=(0, 1))
     heatmap = tf.reduce_sum(feature_maps[0] * weights, axis=-1)
-    heatmap = tf.maximum(heatmap, 0)
+    heatmap = tf.nn.relu(heatmap)
+    tf.debugging.assert_all_finite(heatmap, "Grad-CAM heatmap contains NaN or Inf.")
     maximum = tf.reduce_max(heatmap)
-    heatmap = tf.where(maximum > 0, heatmap / maximum, heatmap)
+    has_activation = float(maximum.numpy()) > 0
+    heatmap = tf.math.divide_no_nan(heatmap, maximum)
     heatmap = tf.image.resize(
         heatmap[..., tf.newaxis], IMAGE_SIZE, method="bilinear"
     )
@@ -178,7 +199,6 @@ def predict_with_gradcam(
             f"{probabilities_array.shape[0]}."
         )
 
-    class_index = int(class_index_tensor.numpy())
     confidence = float(probabilities_array[class_index])
     source = image.convert("RGB").resize(IMAGE_SIZE, Image.Resampling.LANCZOS)
 
@@ -192,7 +212,8 @@ def predict_with_gradcam(
             for index, class_name in enumerate(CLASS_NAMES)
         },
         heatmap=heatmap_array,
-        overlay=make_overlay(source, heatmap_array),
+        has_activation=has_activation,
+        overlay=make_overlay(source, heatmap_array) if has_activation else source,
         roi=make_roi_image(source, heatmap_array, roi_threshold),
         inference_seconds=perf_counter() - started,
     )
@@ -230,10 +251,11 @@ def make_roi_image(
     tint[..., 0] = 1.0
     tinted[mask] = 0.62 * original[mask] + 0.38 * tint[mask]
 
-    up = np.pad(mask[:-1, :], ((1, 0), (0, 0)), constant_values=False)
-    down = np.pad(mask[1:, :], ((0, 1), (0, 0)), constant_values=False)
-    left = np.pad(mask[:, :-1], ((0, 0), (1, 0)), constant_values=False)
-    right = np.pad(mask[:, 1:], ((0, 0), (0, 1)), constant_values=False)
-    boundary = mask & ~(up & down & left & right)
-    tinted[boundary] = np.array([1.0, 0.90, 0.08], dtype=np.float32)
+    if mask.any() and not mask.all():
+        up = np.pad(mask[:-1, :], ((1, 0), (0, 0)), constant_values=False)
+        down = np.pad(mask[1:, :], ((0, 1), (0, 0)), constant_values=False)
+        left = np.pad(mask[:, :-1], ((0, 0), (1, 0)), constant_values=False)
+        right = np.pad(mask[:, 1:], ((0, 0), (0, 1)), constant_values=False)
+        boundary = mask & ~(up & down & left & right)
+        tinted[boundary] = np.array([1.0, 0.90, 0.08], dtype=np.float32)
     return Image.fromarray((np.clip(tinted, 0, 1) * 255).astype(np.uint8), mode="RGB")
