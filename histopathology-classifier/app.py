@@ -41,6 +41,23 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    .app-version {
+        position: fixed; right: 20px; bottom: 20px; z-index: 999;
+        padding: 8px 15px; border-radius: 999px;
+        background: #140f50; color: #ffffff; border: 1px solid #a7b8ff;
+        font: 700 14px/1.2 system-ui, sans-serif;
+        box-shadow: 0 3px 12px rgba(20, 15, 80, .18);
+    }
+    </style>
+    <span class="app-version" title="App V2 — updated Grad-CAM calculation"
+          aria-label="App version 2 with updated Grad-CAM">V2</span>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 st.markdown(
     """
